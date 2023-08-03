@@ -1,32 +1,25 @@
-import { Component } from "react";
+import { useState } from "react";
 import { SearchForm, SearchFormButton, SearchFormButtonLabel, SearchFormInput, SearchbarStyled } from "./Searchbar.styled";
 import { ImSearch } from "react-icons/im";
 
-class Searchbar extends Component {
-  state = { 
-    value:''
-  } 
+const Searchbar = ({handleSearchbarValue}) => {
+  const [value, setValue] = useState('');
 
-  handleChange = ({target:{value}}) => {
-    this.setState({value})
-  }
-
-  handleSubmit = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    this.props.onSubmit(this.state.value);
-    this.setState({ value: '' })
-}
+    handleSearchbarValue(value)
+    setValue('')
+  }
   
-  render() { 
     return ( 
 <SearchbarStyled>
-  <SearchForm onSubmit={this.handleSubmit}>
+  <SearchForm onSubmit={handleSubmit}>
     <SearchFormButton type="submit"><ImSearch />
       <SearchFormButtonLabel />
     </SearchFormButton>
     <SearchFormInput
-      onChange={this.handleChange}
-      value={this.state.value}
+      onChange={({target:{value}})=>setValue(value)}
+      value={value}
       type="text"
       autoComplete="off"
       autoFocus
@@ -36,6 +29,5 @@ class Searchbar extends Component {
 </SearchbarStyled>
      );
   }
-}
  
 export default Searchbar;

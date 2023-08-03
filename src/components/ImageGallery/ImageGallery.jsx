@@ -2,94 +2,90 @@ import { getImages } from "components/API/pixabayAPI";
 import Button from "components/Button/Button";
 import ImageGalleryItem from "components/ImageGalleryItem/ImageGalleryItem";
 import Loader from "components/Loader/Loader";
-import { Component } from "react";
+import {  useEffect, useState } from "react";
 import { GalleryContainer, ImageGalleryComponent } from "./ImageGallery.styled";
 import PropTypes from 'prop-types';
 
-class ImageGallery extends Component {
-      state = {
-    images: null,
-    isLoading: false,
-    page: 1,
-    totalPage: 0,
-    textInfo:"",
-  }  
-    
-componentDidUpdate(prevProps, prevState) {
-    if (this.props.textValue !== prevProps.textValue) {
-        this.setState({images: null, page:1,isLoading: true,})
-    getImages(this.props.textValue, 1)
-        .then((resp) => {
-            if (resp.data.total === 0) { this.ifUserEntersWrongRequestName() }
-            else this.ifLoadAllImages(resp)
-this.setState({ images: resp.data.hits, })
-})
-        .catch((error) => {this.errorInfo(error)})
-.finally(() => { this.setState({ isLoading: false, }) })
-    }else if (this.state.page !== prevState.page && this.state.page !== 1) {
-        this.setState({isLoading: true,})
-        getImages(this.props.textValue, this.state.page)
-        .then((resp) => {
-                    this.setState({ images: [...prevState.images, ...resp.data.hits] })
-            })
-        .catch((error) => {console.log(error) })
-        .finally(() => { this.setState({isLoading: false,})
- })
-        }
-    }
+const ImageGallery = ({ onClickOpenModal, textValue }) => {
 
-          errorInfo = (error) => {
-  this.setState({
-      images: null,
-      totalPage: this.state.page,
-      textInfo: error.response.data,
-    })
+  const [images, setImages] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [prevPage, setPrevPage] = useState(1);
+  const [totalPage, setTotalPage] = useState(0);
+  const [textInfo, setTextInfo] = useState("");
+  const [textSearch, setTextSearch] = useState('');
+
+useEffect(() => {
+
+  const errorInfo = (error) => {
+      setImages(null)
+      setTotalPage(page)
+      setTextInfo(error.response.data)
         return
-}
-
-      ifUserEntersWrongRequestName = () => {
-  this.setState({
-      images: null,
-      totalPage: this.state.page,
-      textInfo: "We didn't find any images for your request",
-  })
+  }
+    
+  const ifUserEntersWrongRequestName = () => {
+    setImages(null)
+    setTotalPage(page)
+    setTextInfo("We didn't find any images for your request")
           return
 }
+
+  if (textValue !== textSearch) {
+    setTextSearch(textValue)
+    setImages(null)
+    setPage(1)
+    setPrevPage(1)
+    setIsLoading(true)
+  getImages(textValue, 1)
+    .then((resp) => {
+      if (resp.data.total === 0) { ifUserEntersWrongRequestName() }
+      else ifLoadAllImages(resp)
+    setImages(resp.data.hits)
+})
+.catch((error) => { if (error.response.data) { errorInfo(error) } })
+.finally(() => {setIsLoading(false)})
+    }
+  else if (page !== prevPage && page !== 1) {
+    setPrevPage(prevState => prevState + 1)
+    setIsLoading(true)
+    getImages(textValue, page)
+  .then((resp) => {
+    setImages([...images, ...resp.data.hits])
+})
+.catch((error) => { if (error.response.data) { errorInfo(error) } })
+.finally(() => {setIsLoading(false)})
+}
+}, [images, page, prevPage, textSearch, textValue]);
   
-  ifLoadAllImages = (resp) => {
-    this.setState((prevState) => ({
-      totalPage: Math.ceil(resp.data.total/12),
-      images: prevState.images
-      ? [...prevState.images, ...resp.data.hits]
-      : resp.data.hits,
-      textInfo:"All images is loaded"}
-      ))
+  const ifLoadAllImages = (resp) => {
+    setTotalPage(Math.ceil(resp.data.total / 12));
+    setTextInfo("All images is loaded")
+    setImages(prevImages => prevImages ? [...prevImages, ...resp.data.hits] : resp.data.hits )
   }
 
-handleLoadMore = () => {
-    this.setState((prevState) => ({ page: prevState.page + 1 }))
+const handleLoadMore = () => {
+  setPage(prevState => prevState + 1)
     }
 
-    handleImageClick = (el) => {
-    this.props.onClickOpenModal(el)
+const handleImageClick = (el) => {
+    onClickOpenModal(el)
   }
 
-    render() { 
-  const {images, isLoading, totalPage, page, textInfo} = this.state
-  return (
-      <GalleryContainer>
-      <ImageGalleryComponent>
-        {images && <ImageGalleryItem handleImageClick={this.handleImageClick} images={images} />}
-        </ImageGalleryComponent>
-        {isLoading &&<Loader />}
-      {totalPage === page ? <p>{textInfo}</p> : images && <Button handleLoadMore={this.handleLoadMore} />}
-        </GalleryContainer>
-    );
-  }
+return (
+  <GalleryContainer>
+  <ImageGalleryComponent>
+    {images && <ImageGalleryItem handleImageClick={handleImageClick} images={images} />}
+    </ImageGalleryComponent>
+    {isLoading &&<Loader />}
+  {totalPage === page ? <p>{textInfo}</p> : images && <Button handleLoadMore={handleLoadMore} />}
+    </GalleryContainer>
+);
 }
 
 ImageGallery.propTypes = {
-    resp: PropTypes.object,
+  resp: PropTypes.object,
 }
  
 export default ImageGallery;

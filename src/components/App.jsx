@@ -1,40 +1,25 @@
-import { Component } from 'react';
+import { useState } from 'react';
 import Searchbar from './Searchbar/Searchbar';
 import ImageGallery from './ImageGallery/ImageGallery';
 import Modal from './Modal/Modal';
 
-class App extends Component {
-  state = { 
-    textValue: '',
-    image: '',
-  } 
-  
-  handleSearchbarValue = (textValue) => {
-    this.setState({ textValue })
-  }
+const App = () => {
+  const [textValueApp, setTextValueApp] = useState('');
+  const [image, setImage] = useState('');
+  const [modal, setModal] = useState(false);
 
-  onClickOpenModal = (image) => {
-    this.setState({ image })
-    this.setState({ modal:true })
-  }
-
-  closeModal = () => {
-return this.setState({ modal:false })
-  }
-
-
-  render() { 
-    const{textValue, image, modal}=this.state
     return (
       <>
-        <Searchbar onSubmit={ this.handleSearchbarValue } />
+        <Searchbar handleSearchbarValue={(textValueApp)=>setTextValueApp( textValueApp )} />
         <ImageGallery
-          onClickOpenModal={this.onClickOpenModal}
-          textValue={textValue} />
-        {modal && <Modal closeModal={this.closeModal} image={ image } />}
+          onClickOpenModal={(image) => {
+            setImage(image)
+            setModal(true)
+          }}
+          textValue={textValueApp} />
+        {modal && <Modal closeModal={()=>setModal(false)} image={ image } />}
       </>
     );
-  }
 }
  
 export default App;
